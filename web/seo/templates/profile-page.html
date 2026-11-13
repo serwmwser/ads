@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru" data-base="{{base}}" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F7F2E8">
+<link rel="canonical" href="{{canonical}}">
+<link rel="icon" href="{{base}}/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{{base}}/assets/app.css">
+<link rel="stylesheet" href="{{base}}/assets/profile.css">
+{{jsonld}}
+</head>
+<body>
+<div class="bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><div class="grain"></div></div>
+<a class="skip" href="#main">Перейти к содержимому</a>
+<header class="hdr" id="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="{{navHome}}">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B2C"/><stop offset=".5" stop-color="#FF2E88"/><stop offset="1" stop-color="#2B44FF"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#bg1)"/><path d="M18 22h20l10 10-16 16-14-14z" fill="#FFFCF6"/><circle cx="26" cy="30" r="4" fill="#FF6B2C"/></svg>
+      <span>{{siteName}}<small>мой профиль</small></span>
+    </a>
+    <nav class="nav" aria-label="Навигация профиля">
+      <a href="{{navProfile}}">Профиль</a>
+      <a href="{{navAds}}">Мои объявления</a>
+      <a href="{{navPayments}}">Платежи</a>
+      <a href="{{navSettings}}">Настройки</a>
+    </nav>
+    <div class="hdr-act">
+      <button class="icon-btn" data-theme-toggle aria-label="Переключить тему">&#9790;</button>
+      <a class="btn btn-primary" href="{{navNewAd}}">+ Новое объявление</a>
+      <button class="icon-btn burger" data-nav-toggle aria-expanded="false" aria-label="Меню">&#9776;</button>
+    </div>
+  </div>
+  <div class="progress"><i data-progress></i></div>
+  <div class="mnav" data-mnav>
+    <a href="{{navProfile}}">Профиль</a>
+    <a href="{{navAds}}">Мои объявления</a>
+    <a href="{{navPayments}}">Платежи</a>
+    <a href="{{navSettings}}">Настройки</a>
+    <a href="{{navNewAd}}">+ Новое объявление</a>
+  </div>
+</header>
+<main id="main" class="profile-wrap">
+  <aside class="profile-side">
+    <div class="profile-card">
+      <div class="profile-avatar" data-avatar>{{avatarInitial}}</div>
+      <div class="profile-info">
+        <b data-user-name>{{userName}}</b>
+        <span data-user-phone>{{userPhone}}</span>
+      </div>
+    </div>
+    <nav class="profile-menu">
+      <a href="{{navProfile}}" class="profile-menu-item {{activeProfile}}">
+        <span class="icon">&#128100;</span> Профиль
+      </a>
+      <a href="{{navAds}}" class="profile-menu-item {{activeAds}}">
+        <span class="icon">&#128230;</span> Мои объявления
+        <span class="badge" data-ads-count>{{adsCount}}</span>
+      </a>
+      <a href="{{navPayments}}" class="profile-menu-item {{activePayments}}">
+        <span class="icon">&#128179;</span> Платежи
+      </a>
+      <a href="{{navSettings}}" class="profile-menu-item {{activeSettings}}">
+        <span class="icon">&#9881;</span> Настройки
+      </a>
+      <button class="profile-menu-item" data-logout>
+        <span class="icon">&#128682;</span> Выйти
+      </button>
+    </nav>
+    <div class="profile-side-foot">
+      <a href="{{navHome}}">← На главную</a>
+    </div>
+  </aside>
+  <section class="profile-content">
+    <nav class="crumbs" aria-label="Хлебные крошки">{{crumbs}}</nav>
+    <h1>{{h1}}</h1>
+    <p class="lead">{{lead}}</p>
+    {{body}}
+  </section>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="fnote">{{orgName}}, ИНН {{orgInn}}. Поддержка: <a style="display:inline;color:var(--tang)" href="mailto:{{orgEmail}}">{{orgEmail}}</a> · © {{year}} {{siteName}}</div>
+  </div>
+</footer>
+<div class="toasts" data-toasts aria-live="polite"></div>
+<script>window.ADS_USER={{userData}};</script>
+<script src="{{base}}/assets/profile.js" defer></script>
+</body>
+</html>
