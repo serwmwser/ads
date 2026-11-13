@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /chat/
+Disallow: /profile/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /payments/
+Disallow: /search
+Allow: /
+
+Sitemap: https://ads.himeet.online/sitemap.xml
