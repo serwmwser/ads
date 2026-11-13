@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '24'
       - name: Build static site
-        run: node web/seo/build-seo.mjs --pages
+        run: node web/seo/build-seo.mjs --pages --base= --origin=https://ads.himeet.online
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

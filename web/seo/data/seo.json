@@ -13,10 +13,10 @@
     "pages": {
       "enabled": true,
       "repo": "serwmwser/ads",
-      "origin": "https://serwmwser.github.io",
-      "basePath": "/ads",
+      "origin": "https://ads.himeet.online",
+      "basePath": "",
       "indexable": false,
-      "customDomain": ""
+      "customDomain": "ads.himeet.online"
     }
   },
   "categories": [
