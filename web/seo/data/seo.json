@@ -9,6 +9,14 @@
       "name": "Яковенко Сергей Владимирович (самозанятый)",
       "inn": "263508859634",
       "email": "support@himeet.online"
+    },
+    "pages": {
+      "enabled": true,
+      "repo": "serwmwser/ads",
+      "origin": "https://serwmwser.github.io",
+      "basePath": "/ads",
+      "indexable": false,
+      "customDomain": ""
     }
   },
   "categories": [

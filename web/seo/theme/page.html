@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru" data-base="{{base}}" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<meta name="robots" content="{{robots}}">
+<meta name="theme-color" content="#F7F2E8">
+<link rel="canonical" href="{{canonical}}">
+<link rel="icon" href="{{base}}/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{{base}}/assets/app.css">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:site_name" content="{{siteName}}">
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{canonical}}">
+<meta property="og:image" content="{{ogImage}}">
+<meta name="twitter:card" content="summary_large_image">
+{{jsonld}}
+</head>
+<body>
+<div class="bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span><div class="grain"></div></div>
+<a class="skip" href="#main">Перейти к содержимому</a>
+<header class="hdr" id="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="{{navHome}}">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B2C"/><stop offset=".5" stop-color="#FF2E88"/><stop offset="1" stop-color="#2B44FF"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#bg1)"/><path d="M18 22h20l10 10-16 16-14-14z" fill="#FFFCF6"/><circle cx="26" cy="30" r="4" fill="#FF6B2C"/></svg>
+      <span>{{siteName}}<small>объявления и чат</small></span>
+    </a>
+    <nav class="nav" aria-label="Основная навигация">
+      <a href="{{navCats}}">Категории</a>
+      <a href="{{navGeo}}">Регионы и города</a>
+      <a href="{{navHow}}">Как это работает</a>
+      <a href="{{navPrices}}">Тарифы</a>
+    </nav>
+    <div class="hdr-act">
+      <button class="icon-btn" data-search-open aria-label="Поиск города">&#128269;<kbd>Ctrl K</kbd></button>
+      <button class="icon-btn" data-theme-toggle aria-label="Переключить тему">&#9790;</button>
+      <a class="btn btn-primary" href="#board">Разместить</a>
+      <button class="icon-btn burger" data-nav-toggle aria-expanded="false" aria-label="Меню">&#9776;</button>
+    </div>
+  </div>
+  <div class="progress"><i data-progress></i></div>
+  <div class="mnav" data-mnav>
+    <a href="{{navCats}}">Категории</a><a href="{{navGeo}}">Регионы и города</a>
+    <a href="{{navHow}}">Как это работает</a><a href="{{navPrices}}">Тарифы</a><a href="{{legalRules}}">Правила сервиса</a>
+  </div>
+</header>
+<main id="main">
+  {{hero}}
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Хлебные крошки">{{crumbs}}</nav>
+    <h1>{{h1}}</h1>
+    <p class="lead">{{lead}}</p>
+  </div>
+  {{body}}
+</main>
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <b style="font-size:18px">{{siteName}}</b>
+        <p style="color:var(--muted);font-size:14px;margin-top:10px">Объявления с чатом и переводом сообщений. Первое объявление бесплатно, цены в рублях, вход по российскому номеру телефона.</p>
+      </div>
+      <div>
+        <b>Разделы</b>
+        <a href="{{navCats}}">Категории</a><a href="{{navGeo}}">Регионы и города</a><a href="{{navPrices}}">Тарифы</a>
+      </div>
+      <div>
+        <b>Документы</b>
+        <a href="{{legalPrivacy}}">Политика конфиденциальности</a><a href="{{legalConsent}}">Согласие на обработку данных</a>
+        <a href="{{legalOffer}}">Оферта и тарифы</a><a href="{{legalRules}}">Правила сервиса</a>
+      </div>
+    </div>
+    <div class="fnote">{{orgName}}, ИНН {{orgInn}}. Поддержка: <a style="display:inline;color:var(--tang)" href="mailto:{{orgEmail}}">{{orgEmail}}</a> · © {{year}} {{siteName}}</div>
+  </div>
+</footer>
+<div class="toasts" data-toasts aria-live="polite"></div>
+{{scripts}}
+</body>
+</html>
