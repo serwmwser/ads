@@ -1,7 +1,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { HttpError, parseCookies } from './util.js';
+import { HttpError, parseCookies, env } from './util.js';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -10,6 +10,30 @@ const MIME = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp',
   '.svg': 'image/svg+xml', '.ico': 'image/x-icon'
 };
+
+const ORIGINS = env('CORS_ORIGINS', 'https://ads.himeet.online,http://localhost:3000,http://localhost:8080')
+  .split(',').map(s => s.trim()).filter(Boolean);
+const TRUST_PROXY = env('TRUST_PROXY', '0') === '1';
+
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (!origin) return;
+  res.setHeader('Vary', 'Origin');
+  if (!ORIGINS.includes(origin)) return;
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '600');
+}
+
+function clientIp(req) {
+  if (TRUST_PROXY) {
+    const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    if (fwd) return fwd;
+  }
+  return req.socket.remoteAddress;
+}
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -35,11 +59,21 @@ export function serve({ port, routes, staticDir }) {
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     const pathname = decodeURIComponent(url.pathname);
+    applyCors(req, res);
     res.json = (data, status = 200) => {
-      res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'X-Content-Type-Options': 'nosniff' });
+      res.writeHead(status, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff'
+      });
       res.end(JSON.stringify(data));
     };
     try {
+      if (req.method === 'OPTIONS' && pathname.startsWith('/api/')) {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
       const handler = map.get(req.method + ' ' + pathname);
       if (handler) {
         const body = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) ? await readBody(req) : {};
@@ -47,7 +81,7 @@ export function serve({ port, routes, staticDir }) {
           method: req.method, path: pathname, headers: req.headers, body,
           query: Object.fromEntries(url.searchParams),
           cookies: parseCookies(req.headers.cookie),
-          ip: req.socket.remoteAddress
+          ip: clientIp(req)
         };
         const out = await handler(ctx, res);
         if (!res.writableEnded) res.json(out ?? { ok: true });
