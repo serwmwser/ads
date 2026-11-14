@@ -22,6 +22,10 @@ const GEOCFG = cfg.geo || {};
 const MIN_ADS = GEOCFG.minAds ?? 3;
 const INDEX_EMPTY = GEOCFG.indexEmptyCityPages === true;
 const TOP_ONLY = GEOCFG.combosTopOnly !== false;
+const API_BASE = String(val('api', S.apiBase || '')).replace(/\/+$/, '');
+const MARKET = val('market', S.market || 'ru');
+const TPLS = cfg.templates || {};
+const fillT = (tpl, fb, v) => String(tpl || fb).replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m));
 const TODAY = new Date().toISOString().slice(0, 10);
 const urls = [];
 let pages = 0;
@@ -98,7 +102,7 @@ function page(o) {
     boardAttr: o.board ? ' data-board data-cat="' + (o.board.cat || '') + '" data-city="' + (o.board.city || '') + '"' : '',
     scripts: (o.board ? '<script src="' + link('/assets/demo-ads.js') + '" defer></script>' : '') +
       '<script>window.ADS_CATS=' + JSON.stringify(catClient) + ';</script>' +
-      '<script src="' + link('/assets/app.js') + '" defer></script>',
+      '<script src="' + link('/assets/app.js') + '" defer></script>' + (o.extra || ''),
     jsonld: ld.map(x => '<script type="application/ld+json">' + JSON.stringify(x) + '<\/script>').join('\n')
   };
   write(o.file, TPL.replace(/\{\{(\w+)\}\}/g, (m, k) => (k in values ? values[k] : m)));
@@ -192,7 +196,7 @@ function heroSection() {
 /* ---------- pages ---------- */
 page({
   file: 'index.html', url: '/', hero: heroSection(),
-  title: S.name + ' — бесплатные объявления с чатом и переводом',
+  title: fillT(TPLS.home, S.name + ' — бесплатные объявления с чатом и переводом', { site: S.name }),
   description: S.description, h1: '', lead: '',
   body: '<div class="wrap">' +
     '<section class="sec rev" id="categories" style="border-top:none"><div class="sec-head"><div><span class="eyebrow">Категории</span><h2 style="margin-top:12px">Четыре раздела, ноль лишнего</h2><p>Всё, что нужно городу: жильё, транспорт, техника и услуги.</p></div></div><div class="cats">' +
@@ -204,7 +208,7 @@ page({
 for (const c of cats) {
   page({
     file: 'c/' + c.slug + '/index.html', url: '/c/' + c.slug + '/',
-    title: c.h1 + ' — ' + S.name, description: c.description, h1: c.h1, lead: c.intro,
+    title: fillT(TPLS.category, c.h1 + ' — ' + S.name, { name: c.name, h1: c.h1, site: S.name }), description: c.description, h1: c.h1, lead: c.intro,
     crumbs: [{ name: 'Главная', url: '/' }, { name: c.name, url: '/c/' + c.slug + '/' }],
     body: '<div class="wrap">' + boardSection({ attr: ' data-board data-cat="' + c.slug + '" data-city=""' }) +
       '<section class="sec rev"><div class="sec-head"><div><h2>' + esc(c.name) + ' в городах</h2></div><a class="btn btn-sm" href="' + link('/geo/') + '">Все регионы</a></div>' +
@@ -219,7 +223,7 @@ const districts = new Map();
 regions.forEach(r => { const d = r.district || 'Прочие'; if (!districts.has(d)) districts.set(d, []); districts.get(d).push(r); });
 page({
   file: 'geo/index.html', url: '/geo/',
-  title: 'Все регионы и города России — ' + S.name,
+  title: fillT(TPLS.geo, 'Все регионы и города России — ' + S.name, { site: S.name }),
   description: 'Каталог регионов и городов: ' + regions.length + ' регионов, ' + cities.length + ' городов. Объявления с фото, ценами в рублях и чатом.',
   h1: 'Все регионы и города России', lead: 'Выберите регион и город. Поиск по названию работает мгновенно — нажмите Ctrl + K в любой момент.',
   crumbs: [{ name: 'Главная', url: '/' }, { name: 'Регионы и города', url: '/geo/' }],
@@ -250,7 +254,7 @@ for (const t of cities) {
   const n = demoByCity(t.name);
   page({
     file: 'city/' + t.slug + '/index.html', url: '/city/' + t.slug + '/',
-    title: 'Объявления ' + t.where + ' — ' + S.name,
+    title: fillT(TPLS.city, 'Объявления ' + t.where + ' — ' + S.name, { name: t.name, where: t.where, site: S.name }),
     description: 'Частные объявления ' + t.where + ': недвижимость, транспорт, электроника, работа и услуги. Фото, цены в рублях, чат.',
     h1: 'Объявления ' + t.where,
     lead: (t.region ? t.name + ' — ' + t.region + '. ' : '') + (t.population ? 'Население около ' + num(t.population) + ' человек. ' : '') + (t.note || 'Выберите категорию, пишите автору в чат и договаривайтесь о встрече.'),
@@ -267,7 +271,7 @@ for (const c of cats) for (const t of (TOP_ONLY ? topCities : cities)) {
   const n = demo.filter(a => a.cat === c.slug && a.city === t.name).length;
   page({
     file: 'c/' + c.slug + '/' + t.slug + '/index.html', url,
-    title: c.h1 + ' ' + t.where + ' — ' + S.name,
+    title: fillT(TPLS.categoryCity, c.h1 + ' ' + t.where + ' — ' + S.name, { name: c.name, h1: c.h1, where: t.where, site: S.name }),
     description: c.name + ' ' + t.where + ': объявления с фото и ценой в рублях, чат с автором, первое объявление бесплатно.',
     h1: c.h1 + ' ' + t.where, lead: c.intro + (t.region ? ' Регион: ' + t.region + '.' : ''),
     crumbs: [{ name: 'Главная', url: '/' }, { name: c.name, url: '/c/' + c.slug + '/' }, { name: t.name, url }],
@@ -297,10 +301,69 @@ page({
   board: {}
 });
 
+/* ---------- закрытые страницы: кабинет, оплата, админка ---------- */
+const clientCfg = { api: API_BASE, market: MARKET, locale: MARKET === 'ru' ? 'ru-RU' : 'en-US', currency: MARKET === 'ru' ? 'RUB' : 'USD' };
+const PROFILE_TPL = fs.readFileSync(path.join(HERE, 'templates', 'profile-page.html'), 'utf8');
+const EN_UI = [['Перейти к содержимому', 'Skip to content'], ['Навигация профиля', 'Profile navigation'], ['Переключить тему', 'Toggle theme'], ['Хлебные крошки', 'Breadcrumbs'],
+  ['+ Новое объявление', '+ New listing'], ['Мои объявления', 'My listings'], ['мой профиль', 'my account'], ['Профиль', 'Profile'], ['Платежи', 'Payments'], ['Настройки', 'Settings'],
+  ['Выйти', 'Sign out'], ['← На главную', '← Home'], ['Меню', 'Menu'], ['Поддержка:', 'Support:'], ['ИНН', 'Tax ID']];
+function privatePage(o) {
+  const ru = MARKET === 'ru';
+  const scripts = '<script>window.ADS_CONFIG=' + JSON.stringify(clientCfg) + ';<\/script>' +
+    '<script src="' + link('/assets/api.js') + '" defer></script>' +
+    o.scripts.map(s => '<script src="' + link('/assets/' + s) + '" defer></script>').join('');
+  const crumbs = '<a href="' + link('/') + '">' + (ru ? 'Главная' : 'Home') + '</a><span>/</span><span>' + esc(o.h1) + '</span>';
+  const values = {
+    base: BASE, lang: ru ? 'ru' : 'en', title: esc(o.title), description: esc(o.description || o.title), canonical: abs(o.url), jsonld: '',
+    navHome: link('/'), siteName: esc(S.name), navProfile: link('/profile/'), navAds: link('/profile/'), navPayments: link('/profile/payments/'),
+    navSettings: link('/profile/settings/'), navNewAd: link('/profile/ads/new/'),
+    avatarInitial: '', userName: '', userPhone: '', adsCount: '',
+    activeProfile: o.active === 'ads' ? 'active' : '', activeAds: '', activePayments: o.active === 'payments' ? 'active' : '', activeSettings: o.active === 'settings' ? 'active' : '',
+    crumbs, h1: esc(o.h1), lead: esc(o.lead || ''), body: '', year: String(new Date().getFullYear()),
+    orgName: esc(S.org.name), orgInn: esc(S.org.inn), orgEmail: esc(S.org.email), scripts
+  };
+  let tpl = PROFILE_TPL;
+  if (!ru) for (const [a, b] of EN_UI) tpl = tpl.split(a).join(b);
+  write(o.file, tpl.replace(/\{\{(\w+)\}\}/g, (m, k) => (k in values ? values[k] : m)));
+  pages++;
+}
+const L10N = MARKET === 'ru'
+  ? { ads: 'Мои объявления', adsLead: 'Ваши объявления, их статус и просмотры.', newAd: 'Новое объявление', newLead: 'Заполните форму: объявление уйдёт на проверку перед публикацией.', editAd: 'Редактирование объявления', editLead: 'После сохранения объявление снова проходит проверку.', pay: 'Платежи и тарифы', payLead: 'Тарифы и история платежей.', set: 'Настройки профиля', setLead: 'Имя в профиле и удаление аккаунта.', ret: 'Оплата', retLead: 'Проверяем статус вашего платежа.', adm: 'Панель модератора', admLead: 'Модерация, жалобы, пользователи, тарифы.', sfx: ' — ' + S.name }
+  : { ads: 'My listings', adsLead: 'Your listings, their status and views.', newAd: 'New listing', newLead: 'Fill in the form: the listing is reviewed before it is published.', editAd: 'Edit listing', editLead: 'After saving, the listing is reviewed again.', pay: 'Payments and plans', payLead: 'Plans and payment history.', set: 'Profile settings', setLead: 'Display name and account deletion.', ret: 'Payment', retLead: 'Checking the status of your payment.', adm: 'Moderation panel', admLead: 'Moderation, complaints, users, plans.', sfx: ' | ' + S.name };
+privatePage({ file: 'profile/index.html', url: '/profile/', title: L10N.ads + L10N.sfx, h1: L10N.ads, lead: L10N.adsLead, active: 'ads', scripts: ['profile.js'] });
+privatePage({ file: 'profile/ads/new/index.html', url: '/profile/ads/new/', title: L10N.newAd + L10N.sfx, h1: L10N.newAd, lead: L10N.newLead, active: 'ads', scripts: ['profile.js'] });
+privatePage({ file: 'profile/ads/edit/index.html', url: '/profile/ads/edit/', title: L10N.editAd + L10N.sfx, h1: L10N.editAd, lead: L10N.editLead, active: 'ads', scripts: ['profile.js'] });
+privatePage({ file: 'profile/payments/index.html', url: '/profile/payments/', title: L10N.pay + L10N.sfx, h1: L10N.pay, lead: L10N.payLead, active: 'payments', scripts: ['profile.js'] });
+privatePage({ file: 'profile/settings/index.html', url: '/profile/settings/', title: L10N.set + L10N.sfx, h1: L10N.set, lead: L10N.setLead, active: 'settings', scripts: ['profile.js'] });
+privatePage({ file: 'payments/return/index.html', url: '/payments/return/', title: L10N.ret + L10N.sfx, h1: L10N.ret, lead: L10N.retLead, active: 'payments', scripts: ['payments.js'] });
+privatePage({ file: 'admin/index.html', url: '/admin/', title: L10N.adm + L10N.sfx, h1: L10N.adm, lead: L10N.admLead, active: '', scripts: ['admin.js'] });
+
+/* страница входа: разметка для auth.js (поле зависит от рынка) */
+{
+  const ru = MARKET === 'ru';
+  const tx = ru
+    ? { title: 'Вход — ' + S.name, h1: 'Вход по номеру телефона', lead: 'Первое объявление бесплатно. Код придёт в СМС на ваш российский номер.', label: 'Номер телефона', ph: '+7 900 123 45 67', type: 'tel', ac: 'tel', send: 'Получить код в СМС', hint: 'Введите код из СМС', code: 'Код', verify: 'Войти', back: 'Изменить номер', resend: 'Отправить код ещё раз', agree: 'Нажимая кнопку, вы соглашаетесь с', pp: 'политикой конфиденциальности', and1: ', ', cs: 'согласием на обработку персональных данных', and2: ' и ', of: 'офертой' }
+    : { title: 'Sign in | ' + S.name, h1: 'Sign in with email', lead: 'Your first listing is free. We will email you a one-time code.', label: 'Email address', ph: 'you@example.com', type: 'email', ac: 'email', send: 'Send code', hint: 'Enter the code from the email', code: 'Code', verify: 'Sign in', back: 'Change email', resend: 'Send the code again', agree: 'By continuing you agree to the', pp: 'privacy policy', and1: ', ', cs: 'data processing consent', and2: ' and ', of: 'terms' };
+  const field = (id, label, extra) => '<label for="' + id + '" style="display:block;font-weight:700;margin-bottom:6px">' + esc(label) + '</label><input id="' + id + '" ' + extra + ' style="width:100%;height:52px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font:inherit;font-size:17px">';
+  page({
+    file: 'auth/login/index.html', url: '/auth/login/', title: tx.title, description: tx.lead, h1: tx.h1, lead: tx.lead, robots: 'noindex, nofollow',
+    crumbs: [{ name: ru ? 'Главная' : 'Home', url: '/' }, { name: ru ? 'Вход' : 'Sign in', url: '/auth/login/' }],
+    body: '<div class="wrap"><div style="max-width:440px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:28px">' +
+      '<form id="login-form" novalidate>' + field('ident', tx.label, 'type="' + tx.type + '" autocomplete="' + tx.ac + '" placeholder="' + esc(tx.ph) + '" required') +
+      '<div id="ident-err" style="color:var(--danger);font-size:13px;margin:6px 0;min-height:18px"></div><button type="submit" class="btn btn-primary" style="width:100%;height:52px;font-size:16px">' + esc(tx.send) + '</button></form>' +
+      '<form id="code-form" hidden novalidate><p id="code-hint" style="margin:0 0 12px;color:var(--muted)">' + esc(tx.hint) + '</p>' + field('code', tx.code, 'inputmode="numeric" maxlength="5" autocomplete="one-time-code" placeholder="12345" required') +
+      '<div id="code-err" style="color:var(--danger);font-size:13px;margin:6px 0;min-height:18px"></div><button type="submit" class="btn btn-primary" style="width:100%;height:52px;font-size:16px">' + esc(tx.verify) + '</button>' +
+      '<div style="display:flex;gap:8px;margin-top:10px"><button type="button" class="btn btn-ghost" id="code-back" style="flex:1">' + esc(tx.back) + '</button><button type="button" class="btn btn-ghost" id="code-resend" style="flex:1">' + esc(tx.resend) + '</button></div></form>' +
+      '<p style="margin:20px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);line-height:1.6">' + esc(tx.agree) + ' <a href="' + link('/legal/privacy/') + '">' + esc(tx.pp) + '</a>' + esc(tx.and1) + '<a href="' + link('/legal/consent/') + '">' + esc(tx.cs) + '</a>' + esc(tx.and2) + '<a href="' + link('/legal/offer/') + '">' + esc(tx.of) + '</a>.</p></div></div>',
+    extra: '<script>window.ADS_CONFIG=' + JSON.stringify(clientCfg) + ';<\/script><script src="' + link('/assets/api.js') + '" defer></script><script src="' + link('/assets/auth.js') + '" defer></script>'
+  });
+}
+
 /* ---------- assets ---------- */
 fs.mkdirSync(path.join(OUT, 'assets'), { recursive: true });
 fs.copyFileSync(path.join(HERE, 'theme', 'app.css'), path.join(OUT, 'assets', 'app.css'));
 fs.copyFileSync(path.join(HERE, 'theme', 'app.js'), path.join(OUT, 'assets', 'app.js'));
+for (const f of ['api.js', 'profile.js', 'payments.js', 'admin.js', 'auth.js', 'profile.css']) fs.copyFileSync(path.join(HERE, 'theme', f), path.join(OUT, 'assets', f));
 write('assets/demo-ads.js', 'window.ADS_DEMO=' + JSON.stringify(demo) + ';');
 write('assets/geo-search.js', 'window.ADS_GEO=' + JSON.stringify(cities.map(c => ({ n: c.name, s: c.slug, r: c.region }))) + ';');
 write('.nojekyll', '');
@@ -356,7 +419,7 @@ function coverPng() {
 }
 try { write('assets/cover.png', coverPng()); } catch (e) { console.warn('cover.png пропущен: ' + e.message); }
 
-write('robots.txt', ['User-agent: *', 'Disallow: /chat/', 'Disallow: /profile/', 'Disallow: /api/', 'Disallow: /auth/', 'Disallow: /payments/', 'Disallow: /search',
+write('robots.txt', ['User-agent: *', 'Disallow: /chat/', 'Disallow: /profile/', 'Disallow: /api/', 'Disallow: /auth/', 'Disallow: /payments/', 'Disallow: /admin/', 'Disallow: /search',
   INDEXABLE ? 'Allow: /' : 'Disallow: /', '', 'Sitemap: ' + abs('/sitemap.xml'), ''].join('\n'));
 write('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
   urls.map(u => '  <url><loc>' + esc(u) + '</loc><lastmod>' + TODAY + '</lastmod><changefreq>weekly</changefreq></url>').join('\n') + '\n</urlset>\n');

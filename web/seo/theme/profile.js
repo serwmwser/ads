@@ -143,7 +143,7 @@
         '<div class="ad-actions"><span class="price">' + esc(A.money(a.price_rub)) + '</span>' +
         '<span class="ad-status ' + cls + '">' + esc(t('st_' + a.status)) + '</span>' +
         '<div style="display:flex;gap:8px;margin-top:8px">' +
-        '<a class="btn btn-sm" href="' + BASE + '/profile/ads/edit/' + a.id + '/">' + esc(t('edit')) + '</a>' +
+        '<a class="btn btn-sm" href="' + BASE + '/profile/ads/edit/?id=' + a.id + '">' + esc(t('edit')) + '</a>' +
         '<button class="btn btn-sm btn-ghost" data-del-ad="' + a.id + '" style="color:var(--danger)">' + esc(t('del')) + '</button>' +
         '</div></div></div>';
     });
@@ -356,7 +356,11 @@
     try {
       if (path === '/profile/') await renderProfile();
       else if (path === '/profile/ads/new/') await renderAdForm(null);
-      else if (path.indexOf('/profile/ads/edit/') === 0) await renderAdForm(Number(path.split('/').filter(Boolean).pop()));
+      else if (path === '/profile/ads/edit/') {
+        var editId = Number(new URLSearchParams(window.location.search).get('id'));
+        if (!editId) { go('/profile/'); return; }
+        await renderAdForm(editId);
+      }
       else if (path === '/profile/payments/') await renderPayments();
       else if (path === '/profile/settings/') renderSettings();
     } catch (e) {

@@ -17,7 +17,9 @@
       "basePath": "",
       "indexable": false,
       "customDomain": "ads.himeet.online"
-    }
+    },
+    "apiBase": "https://api.ads.himeet.online",
+    "market": "ru"
   },
   "categories": [
     {
