@@ -6,6 +6,7 @@ import { authRoutes } from './auth.js';
 import { paymentRoutes } from './payments.js';
 import { adsRoutes, seedGeo } from './ads.js';
 import { adminRoutes } from './admin.js';
+import { marketRoutes, profile } from './market.js';
 
 const staticDir = path.resolve(BACKEND_DIR, '..', 'web', 'public');
 
@@ -17,9 +18,10 @@ const routes = [
   ...authRoutes,
   ...paymentRoutes,
   ...adsRoutes,
-  ...adminRoutes
+  ...adminRoutes,
+  ...marketRoutes
 ];
 
-seedGeo().catch((e) => console.warn('seedGeo: ' + e.message));
+if (profile.geo === 'ru') seedGeo().catch((e) => console.warn('seedGeo: ' + e.message));
 
 serve({ port: Number(env('PORT', '3000')), routes, staticDir });
