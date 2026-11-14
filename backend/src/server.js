@@ -8,6 +8,7 @@ import { adsRoutes, seedGeo } from './ads.js';
 import { adminRoutes } from './admin.js';
 import { marketRoutes, profile } from './market.js';
 import { authEmailRoutes } from './auth-email.js';
+import { profileRoutes } from './profile.js';
 import { stripeRoutes, ensureIntlTariffs } from './payments-stripe.js';
 
 const staticDir = path.resolve(BACKEND_DIR, '..', 'web', 'public');
@@ -22,6 +23,7 @@ const routes = [
   ...adsRoutes,
   ...adminRoutes,
   ...marketRoutes,
+  ...profileRoutes,
   ...(profile.auth === 'email' ? authEmailRoutes : [])
 ];
 

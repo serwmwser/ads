@@ -40,7 +40,7 @@ export async function seedGeo() {
   console.log('Загружены регионы и города из geo.json');
 }
 
-async function adLimit(userId) {
+export async function adLimit(userId) {
   const e = await q('SELECT kind, quantity FROM entitlements WHERE user_id = $1 AND (expires_at IS NULL OR expires_at > $2)', [userId, nowSql()]);
   let limit = Number(env('FREE_ADS_LIMIT', '3'));
   let pro = false;
@@ -198,7 +198,7 @@ export const adsRoutes = [
         `INSERT INTO ads(user_id, slug, title, description, price_kopeks, category, city, region_code, city_id, contact_phone, show_phone, status, published_at)
          VALUES ($1, '', $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
         [user.id, d.title, d.description, d.price_kopeks, d.category, d.city, d.region, d.city_id,
-         user.phone, d.show_phone, status, status === 'published' ? nowSql() : null]);
+         (String(user.phone).startsWith('email:') ? '' : user.phone), d.show_phone, status, status === 'published' ? nowSql() : null]);
       const adId = ins.rows[0].id;
       await c.query('UPDATE ads SET slug = $1 WHERE id = $2', [(slugify(d.title) || 'ad') + '-' + adId, adId]);
       await savePhotos(c, adId, d.photos);
