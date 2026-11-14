@@ -7,6 +7,7 @@ import { paymentRoutes } from './payments.js';
 import { adsRoutes, seedGeo } from './ads.js';
 import { adminRoutes } from './admin.js';
 import { marketRoutes, profile } from './market.js';
+import { authEmailRoutes } from './auth-email.js';
 
 const staticDir = path.resolve(BACKEND_DIR, '..', 'web', 'public');
 
@@ -19,7 +20,8 @@ const routes = [
   ...paymentRoutes,
   ...adsRoutes,
   ...adminRoutes,
-  ...marketRoutes
+  ...marketRoutes,
+  ...(profile.auth === 'email' ? authEmailRoutes : [])
 ];
 
 if (profile.geo === 'ru') seedGeo().catch((e) => console.warn('seedGeo: ' + e.message));
