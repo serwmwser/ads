@@ -9,6 +9,7 @@ import { adminRoutes } from './admin.js';
 import { marketRoutes, profile } from './market.js';
 import { authEmailRoutes } from './auth-email.js';
 import { profileRoutes } from './profile.js';
+import { seedWorldGeo } from './geo-world.js';
 import { stripeRoutes, ensureIntlTariffs } from './payments-stripe.js';
 
 const staticDir = path.resolve(BACKEND_DIR, '..', 'web', 'public');
@@ -27,7 +28,7 @@ const routes = [
   ...(profile.auth === 'email' ? authEmailRoutes : [])
 ];
 
-if (profile.geo === 'ru') seedGeo().catch((e) => console.warn('seedGeo: ' + e.message));
+(profile.geo === 'ru' ? seedGeo() : seedWorldGeo()).catch((e) => console.warn('seedGeo: ' + e.message));
 
 if (profile.payments === 'stripe') ensureIntlTariffs().catch((e) => console.warn('tariffs: ' + e.message));
 
