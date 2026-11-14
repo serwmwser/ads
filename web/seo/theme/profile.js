@@ -28,7 +28,8 @@
       settings: 'Личные данные', name: 'Имя в профиле', saveBtn: 'Сохранить', nameSaved: 'Имя сохранено',
       danger: 'Удаление аккаунта', dangerText: 'Действие необратимо: объявления будут сняты, сообщения удалены, персональные данные обезличены.',
       dangerBtn: 'Удалить аккаунт навсегда', typeWord: 'УДАЛИТЬ', typeAsk: 'Для подтверждения введите слово УДАЛИТЬ', accountDeleted: 'Аккаунт удалён',
-      logout: 'Вы вышли из аккаунта', loadError: 'Не удалось загрузить данные: '
+      logout: 'Вы вышли из аккаунта', loadError: 'Не удалось загрузить данные: ',
+      photos: 'Фото (до 8)', addPhoto: '+ Добавить фото', photoUploading: 'Загрузка…', removePhoto: 'Убрать фото'
     },
     en: {
       guest: 'User', plan: 'Listings', of: 'of', activeAds: 'active or under review',
@@ -47,7 +48,8 @@
       settings: 'Personal data', name: 'Display name', saveBtn: 'Save', nameSaved: 'Name saved',
       danger: 'Delete account', dangerText: 'This cannot be undone: listings are removed, messages deleted, personal data anonymized.',
       dangerBtn: 'Delete account forever', typeWord: 'DELETE', typeAsk: 'Type DELETE to confirm', accountDeleted: 'Account deleted',
-      logout: 'You have signed out', loadError: 'Could not load data: '
+      logout: 'You have signed out', loadError: 'Could not load data: ',
+      photos: 'Photos (up to 8)', addPhoto: '+ Add photo', photoUploading: 'Uploading…', removePhoto: 'Remove photo'
     }
   };
   var t = function (k) { return (T[L] && T[L][k]) || k; };
@@ -176,6 +178,10 @@
         return '<option value="' + esc(x[key]) + '"' + (x[key] === sel ? ' selected' : '') + '>' + esc(x[label]) + '</option>';
       }).join('');
     };
+    var photosHtml = '<div class="form-group form-full"><label>' + esc(t('photos')) + '</label>' +
+      '<div data-photos style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px"></div>' +
+      '<input type="file" data-photo-input accept="image/jpeg,image/png,image/webp" multiple hidden>' +
+      '<div><button type="button" class="btn btn-sm" data-photo-add>' + esc(t('addPhoto')) + '</button></div></div>';
     var phoneField = A.market === 'ru'
       ? '<div class="form-group form-full"><label><input type="checkbox" name="show_phone"' + (ad && ad.phone ? ' checked' : '') + '> ' + esc(t('showPhone')) + '</label></div>' : '';
 
@@ -187,13 +193,43 @@
       '<div class="form-group"><label>' + esc(t('region')) + '</label><select name="region">' + opt(regions, 'code', 'name', ad && ad.region) + '</select></div>' +
       '<div class="form-group"><label>' + esc(t('city')) + '</label><select name="city"><option value="">' + esc(t('choose')) + '</option></select><div class="err" data-e="city"></div></div>' +
       '<div class="form-group form-full"><label>' + esc(t('desc')) + '</label><textarea name="description" maxlength="5000" placeholder="' + esc(t('descPh')) + '">' + esc(ad ? ad.description : '') + '</textarea><div class="err" data-e="description"></div></div>' +
-      phoneField + '</div>' +
+      photosHtml + phoneField + '</div>' +
       (regions.length ? '' : '<p style="color:var(--danger)">' + esc(t('noGeo')) + '</p>') +
       '<div class="form-actions"><button class="btn btn-primary" type="submit">' + esc(id ? t('save') : t('publish')) + '</button>' +
       '<a class="btn btn-ghost" href="' + BASE + '/profile/">' + esc(t('cancel')) + '</a></div></form>');
 
     var form = $('#ad-form');
     var f = form.elements;
+    var photos = ad ? (ad.photos || []).slice() : [];
+    var box = $('[data-photos]'), fileIn = $('[data-photo-input]'), addBtn = $('[data-photo-add]');
+    function drawPhotos() {
+      box.innerHTML = photos.map(function (u, i) {
+        return '<div style="position:relative;width:84px;height:84px"><img src="' + esc(u) + '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px;border:1px solid var(--line)">' +
+          '<button type="button" data-photo-del="' + i + '" aria-label="' + esc(t('removePhoto')) + '" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--danger);color:#fff;cursor:pointer">&times;</button></div>';
+      }).join('');
+      addBtn.style.display = photos.length >= 8 ? 'none' : '';
+    }
+    box.addEventListener('click', function (e) {
+      var d = e.target.closest('[data-photo-del]');
+      if (!d) return;
+      photos.splice(Number(d.getAttribute('data-photo-del')), 1);
+      drawPhotos();
+    });
+    addBtn.addEventListener('click', function () { fileIn.click(); });
+    fileIn.addEventListener('change', async function () {
+      var files = Array.prototype.slice.call(fileIn.files || []);
+      fileIn.value = '';
+      for (var i = 0; i < files.length && photos.length < 8; i++) {
+        addBtn.disabled = true;
+        addBtn.textContent = t('photoUploading');
+        try { photos.push(await A.uploadPhoto(files[i])); drawPhotos(); }
+        catch (er) { toast(er.message, 'err'); }
+      }
+      addBtn.disabled = false;
+      addBtn.textContent = t('addPhoto');
+    });
+    drawPhotos();
+
     async function loadCities(region, selected) {
       f.city.innerHTML = '<option value="">' + esc(t('choose')) + '</option>';
       if (!region) return;
@@ -220,7 +256,7 @@
         price_rub: Number(f.price.value), category: f.category.value,
         region: f.region.value, city: f.city.value,
         show_phone: f.show_phone ? f.show_phone.checked : false,
-        photos: ad ? (ad.photos || []) : []
+        photos: photos
       };
       if (id) payload.id = id;
       try {
