@@ -8,6 +8,7 @@ import { adsRoutes, seedGeo } from './ads.js';
 import { adminRoutes } from './admin.js';
 import { marketRoutes, profile } from './market.js';
 import { authEmailRoutes } from './auth-email.js';
+import { stripeRoutes, ensureIntlTariffs } from './payments-stripe.js';
 
 const staticDir = path.resolve(BACKEND_DIR, '..', 'web', 'public');
 
@@ -17,7 +18,7 @@ const routes = [
     return { ok: true, db: 'up', driver: 'sqlite', env: env('APP_ENV', 'development') };
   }],
   ...authRoutes,
-  ...paymentRoutes,
+  ...(profile.payments === 'stripe' ? stripeRoutes : paymentRoutes),
   ...adsRoutes,
   ...adminRoutes,
   ...marketRoutes,
@@ -25,5 +26,7 @@ const routes = [
 ];
 
 if (profile.geo === 'ru') seedGeo().catch((e) => console.warn('seedGeo: ' + e.message));
+
+if (profile.payments === 'stripe') ensureIntlTariffs().catch((e) => console.warn('tariffs: ' + e.message));
 
 serve({ port: Number(env('PORT', '3000')), routes, staticDir });

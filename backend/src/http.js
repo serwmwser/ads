@@ -45,6 +45,7 @@ function readBody(req) {
       chunks.push(c);
     });
     req.on('end', () => {
+      req.rawBody = Buffer.concat(chunks).toString('utf8');
       if (!chunks.length) return resolve({});
       try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
       catch { reject(new HttpError(400, 'Некорректный JSON')); }
@@ -78,7 +79,7 @@ export function serve({ port, routes, staticDir }) {
       if (handler) {
         const body = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) ? await readBody(req) : {};
         const ctx = {
-          method: req.method, path: pathname, headers: req.headers, body,
+          method: req.method, path: pathname, headers: req.headers, body, rawBody: req.rawBody || '',
           query: Object.fromEntries(url.searchParams),
           cookies: parseCookies(req.headers.cookie),
           ip: clientIp(req)
