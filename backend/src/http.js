@@ -2,6 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { HttpError, parseCookies, env } from './util.js';
+import { UPLOAD_DIR } from './upload.js';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -35,13 +36,13 @@ function clientIp(req) {
   return req.socket.remoteAddress;
 }
 
-function readBody(req) {
+function readBody(req, limit = 1048576) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     req.on('data', (c) => {
       size += c.length;
-      if (size > 1048576) { reject(new HttpError(413, 'Слишком большой запрос')); req.destroy(); return; }
+      if (size > limit) { reject(new HttpError(413, 'Слишком большой запрос')); req.destroy(); return; }
       chunks.push(c);
     });
     req.on('end', () => {
@@ -77,7 +78,7 @@ export function serve({ port, routes, staticDir }) {
       }
       const handler = map.get(req.method + ' ' + pathname);
       if (handler) {
-        const body = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) ? await readBody(req) : {};
+        const body = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method) ? await readBody(req, pathname === '/api/upload/photo' ? 4194304 : 1048576) : {};
         const ctx = {
           method: req.method, path: pathname, headers: req.headers, body, rawBody: req.rawBody || '',
           query: Object.fromEntries(url.searchParams),
@@ -89,6 +90,16 @@ export function serve({ port, routes, staticDir }) {
         return;
       }
       if (pathname.startsWith('/api/')) { res.json({ ok: false, error: 'Метод не найден' }, 404); return; }
+
+      if (req.method === 'GET' && pathname.startsWith('/uploads/')) {
+        const name = pathname.slice(9);
+        const m = /^[a-f0-9]{20}\.(jpg|png|webp)$/.exec(name);
+        const f = m ? path.join(UPLOAD_DIR, name) : '';
+        if (!f || !fs.existsSync(f)) { res.writeHead(404); res.end('Not found'); return; }
+        res.writeHead(200, { 'Content-Type': MIME['.' + m[1]], 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff', 'Cross-Origin-Resource-Policy': 'cross-origin' });
+        fs.createReadStream(f).pipe(res);
+        return;
+      }
 
       let file = path.join(staticDir, pathname);
       if (!file.startsWith(staticDir)) { res.writeHead(403); res.end('Forbidden'); return; }

@@ -9,6 +9,7 @@ import { adminRoutes } from './admin.js';
 import { marketRoutes, profile } from './market.js';
 import { authEmailRoutes } from './auth-email.js';
 import { profileRoutes } from './profile.js';
+import { uploadRoutes } from './upload.js';
 import { seedWorldGeo } from './geo-world.js';
 import { stripeRoutes, ensureIntlTariffs } from './payments-stripe.js';
 
@@ -25,6 +26,7 @@ const routes = [
   ...adminRoutes,
   ...marketRoutes,
   ...profileRoutes,
+  ...uploadRoutes,
   ...(profile.auth === 'email' ? authEmailRoutes : [])
 ];
 
