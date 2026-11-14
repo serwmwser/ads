@@ -79,6 +79,30 @@
     return formatter.format(Number(value) || 0);
   }
 
+  function shrink(file, maxSide, quality) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth, h = img.naturalHeight;
+          var k = Math.min(1, maxSide / Math.max(w, h));
+          var c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round(w * k));
+          c.height = Math.max(1, Math.round(h * k));
+          var ctx = c.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(url);
+          resolve(c.toDataURL('image/jpeg', quality));
+        } catch (e) { reject(e); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('image')); };
+      img.src = url;
+    });
+  }
+
   var AdsApi = {
     market: MARKET, locale: LOCALE, currency: CURRENCY, base: API,
     ApiError: ApiError, money: money, qs: qs,
@@ -137,7 +161,19 @@
 
     tariffs: function () { return request('GET', '/api/payments/tariffs'); },
     createPayment: function (tariff, method) { return request('POST', '/api/payments/create', { tariff: tariff, method: method || 'checkout' }); },
-    myPayments: function () { return request('GET', '/api/payments/my'); }
+    myPayments: function () { return request('GET', '/api/payments/my'); },
+
+    uploadPhoto: async function (file) {
+      var bad = MARKET === 'ru' ? 'Выберите фото в формате JPEG, PNG или WebP' : 'Choose a JPEG, PNG or WebP image';
+      if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) throw new ApiError(bad, 400, null);
+      var dataUrl;
+      try { dataUrl = await shrink(file, 1600, 0.82); } catch (e) { throw new ApiError(bad, 400, null); }
+      if (dataUrl.length > 3200000) {
+        try { dataUrl = await shrink(file, 1200, 0.7); } catch (e) { throw new ApiError(bad, 400, null); }
+      }
+      var data = await request('POST', '/api/upload/photo', { data: dataUrl });
+      return data.url;
+    }
   };
 
   window.AdsApi = AdsApi;
